@@ -60,7 +60,8 @@ openerp.web_tree_many2one_clickable = function(instance, local)
         _format: function (row_data, options)
         {
             if (this.use_many2one_clickable) {
-                return _.str.sprintf('<a class="oe_form_uri" data-many2one-clickable-model="%s" data-many2one-clickable-id="%s">%s</a>',
+                return _.str.sprintf('<a class="oe_form_uri" data-many2one-clickable-context="%s" data-many2one-clickable-model="%s" data-many2one-clickable-id="%s">%s</a>',
+                    $.isEmptyObject(this.context) ? "" : this.context,
                     this.relation,
                     row_data[this.id].value[0],
                     _.escape(row_data[this.id].value[1] || options.value_if_empty));
@@ -91,10 +92,12 @@ openerp.web_tree_many2one_clickable = function(instance, local)
             this.$current.delegate('a[data-many2one-clickable-model]',
                 'click', function()
                 {
+                    var context = jQuery(this).data('many2one-clickable-context')
                     self.view.do_action({
                         type: 'ir.actions.act_window',
                         res_model: jQuery(this).data('many2one-clickable-model'),
                         res_id: jQuery(this).data('many2one-clickable-id'),
+                        context: context !== "" ? $.parseJSON(context.replace(/\'/g, '\"')) : undefined,
                         views: [[false, 'form']],
                     });
                 });
