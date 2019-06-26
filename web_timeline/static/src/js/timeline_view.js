@@ -85,7 +85,11 @@ odoo.define('web_timeline.TimelineView', function (require) {
 
             this.parse_colors();
             for (var i=0; i<this.colors.length; i++) {
-                fieldNames.push(this.colors[i].field);
+                for (var j=0; j<this.colors[i].tokens.length; j++) {
+                    if (this.colors[i].tokens[j].id === '(name)') {
+                        fieldNames.push(this.colors[i].tokens[j].value);
+                    }
+                }
             }
 
             if (attrs.dependency_arrow) {
@@ -171,13 +175,15 @@ odoo.define('web_timeline.TimelineView', function (require) {
         parse_colors: function () {
             if (this.arch.attrs.colors) {
                 this.colors = _(this.arch.attrs.colors.split(';')).chain().compact().map(function (color_pair) {
-                    var pair = color_pair.split(':'), color = pair[0], expr = pair[1];
-                    var temp = py.parse(py.tokenize(expr));
+                    var temp = color_pair.split(':');
+                    var color = temp[0];
+                    var expr = temp.slice(1).join(':');
+                    var tokens = py.tokenize(expr);
+                    var ast = py.parse(tokens);
                     return {
                         'color': color,
-                        'field': temp.expressions[0].value,
-                        'opt': temp.operators[0],
-                        'value': temp.expressions[1].value
+                        'tokens': tokens,
+                        'ast': ast,
                     };
                 }).value();
             } else {
