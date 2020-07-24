@@ -71,15 +71,11 @@ odoo.define('web.web_widget_color', function(require) {
     /*
      * Init jscolor for each editable mode on view form
      */
-    FormView.include({
-        on_button_edit: function () {
+       FormView.include({
+        on_form_changed: function () {
             this._super();
             jscolor.init(this.$el[0]);
         },
-        on_button_create: function () {
-            this._super();
-            jscolor.init(this.$el[0]);
-        }
     });
 
     return {
