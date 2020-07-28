@@ -39,6 +39,7 @@ the possible attributes for the tag:
   view.
 * colors (optional): it allows to set certain specific colors if the expressed
   condition (JS syntax) is met.
+* tooltip (optional): it defines the name of the field of type string for the tooltip content.
 
 You also need to declare the view in an action window of the involved model.
 
@@ -58,7 +59,8 @@ Example:
                           default_group_by="user_id"
                           event_open_popup="true"
                           zoomKey="ctrlKey"
-                          colors="#ec7063:user_id == false;#2ecb71:kanban_state=='done';">
+                          colors="#ec7063:user_id == false;#2ecb71:kanban_state=='done';"
+                          tooltip="tooltip_model_field">
                 </timeline>
             </field>
         </record>
