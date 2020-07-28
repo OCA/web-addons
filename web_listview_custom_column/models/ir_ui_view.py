@@ -2,7 +2,7 @@
 # © 2017 Therp BV <http://therp.nl>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from lxml import etree
-from openerp import _, api, models, tools
+from openerp import _, api, models, tools, exceptions
 
 
 class IrUiView(models.Model):
@@ -39,6 +39,21 @@ class IrUiView(models.Model):
                     element.getnext().addnext(element)
                     break
         elif diff['operation'] == 'reset':
+            # if empty, then search if a global view has been set on this
+            # and prompt user who tries to delete to talk to user who
+            # created those custom views.
+            if not customized_view:
+                views = self.search([
+                    ('model', '=', self.model),
+                    ('mode', '=', 'extension'),
+                    ('user_ids', '=', False),
+                    ('create_uid', '!=', self.env.user.id),
+                    ])
+                raise exceptions.ValidationError(_(
+                    'Users %s have created views that apply to everyone. \n '
+                    'If you want to change this view you need to notify \n'
+                    'them to reset the views they have set by clicking this \n'
+                    'button') % ', '.join(views.mapped('create_uid.name')))
             customized_view.unlink()
             return []
         elif diff['operation'] == 'to_user':
@@ -102,7 +117,7 @@ class IrUiView(models.Model):
             'arch': arch,
             'inherit_id': self.id,
             'mode': 'extension',
-            'priority': 10000 + (diff['type'] == 'user' and 1 or 0),
+            'priority': 10000 + (diff['type'] == 'all' and 1 or 0),
             'user_ids': [(4, self.env.uid)] if diff['type'] == 'user' else [],
         })[0]
         result = self.create(values)
