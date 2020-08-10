@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_res_users_validation_form" model="ir.ui.view">
+        <field name="name">res.users.validation.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <button name="%(base.change_password_wizard_action)d" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </button>
+            <button name="%(base.change_password_wizard_action)d" position="after">
+                <button string="Change Password" type="action"
+                        confirm="Do you want to Change your password?"
+                        name="%(base.change_password_wizard_action)d"
+                        help="Change the user password."
+                        options='{"security": "security_code"}'/>
+            </button>
+        </field>
+   </record>
+
+</odoo>
