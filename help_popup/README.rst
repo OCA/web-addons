@@ -5,45 +5,36 @@
 Help Popup
 ===========
 
-This module adds an html help popup on each model action.
-Two help fields are added to actions: enduser_help (html widget)
-and advanced_help.
-
-
-Installation
-============
-
-It was tested on Odoo 8.0 branch.
-
-
-Configuration
-=============
-
-Go to the action of your choice to add some help content
-or put data in some modules.
-
-To display the button which open the popup, enduser_help or advanced_help field
-should be set to any value.
+This module adds an html help popup on each model action. 
+It brings to end users inline documentation.
+Some parts of the documentation can be modified by anyone (with proper rights).
 
 
 Usage
 =====
 
-Click on ? button
+Read the documentation below
 
 
 .. image:: help_popup/static/description/popup.png
-    :alt: License: Help Popup
+    :alt: Help Popup
+
+Here is the documentation for the whole sales menu with a summary
+
+.. image:: help_popup/static/description/sales_doc.png
+    :alt: Documentaion for main menu
 
 
 Alternative
 -----------
 If you have website module installed, it could be an option
-to install help_online instead of this module.
+to install help_online instead of this module. Just compare them.
 
-Help Online is more advanced (allow the end user to add help)
-but depends on an other module.
-Help popup is more like an embedded help that use power users for end users.
+
+Roadmap / issue
+===============
+* For v9 move to knowledge repository
+* Allow to plug an online translator to reduce the translation effort to the popup.
 
 
 Bug Tracker
