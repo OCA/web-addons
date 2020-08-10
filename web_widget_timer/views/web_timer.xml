@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template name="Web Timer Assets" id="web_timer_assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script src="/web_widget_timer/static/src/js/web_timer.js"/>
+        </xpath>
+    </template>
+</odoo>
