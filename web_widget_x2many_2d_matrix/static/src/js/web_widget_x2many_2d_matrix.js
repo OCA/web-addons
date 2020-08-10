@@ -44,6 +44,7 @@ openerp.web_widget_x2many_2d_matrix = function(instance)
             this.field_label_x_axis = node.attrs.field_label_x_axis || this.field_x_axis;
             this.field_label_y_axis = node.attrs.field_label_y_axis || this.field_y_axis;
             this.field_value = node.attrs.field_value || this.field_value;
+            this.boolean_field_value = node.attrs.boolean_field_value || this.boolean_field_value;
             for (var property in node.attrs) {
                 if (property.indexOf("field_att_") === 0) {
                     this.fields_att[property.substring(10)] = node.attrs[property];
@@ -221,6 +222,12 @@ openerp.web_widget_x2many_2d_matrix = function(instance)
             this.by_id[row.id] = row;
         },
 
+        boolean_is_true: function(x, y)
+        {
+            return this.get_field_value(
+                this.by_x_axis[x][y], this.boolean_field_value);
+        },
+
         // get x axis values in the correct order
         get_x_axis_values: function()
         {
@@ -280,6 +287,15 @@ openerp.web_widget_x2many_2d_matrix = function(instance)
             return vals;
         },
 
+        row_xy_exists: function(x, y)
+        {
+            if( x in this.by_x_axis && y in this.by_x_axis[x] ) {
+                return  true;
+            }
+
+            return false;
+        },
+
         // return the value of a coordinate
         get_xy_value: function(x, y)
         {
@@ -313,6 +329,16 @@ openerp.web_widget_x2many_2d_matrix = function(instance)
         {
             return instance.web.format_value(
                 val, {'type': this.fields[this.field_value].type});
+        },
+
+        // format a value from the database for display
+        format_xy_cell_value: function(put_special_caracter,val)
+        {
+            if (put_special_caracter) {
+                val = '*'.concat(val)
+            }
+            return instance.web.format_value(
+                val, {'type': "string"});
         },
 
         // compute totals
@@ -402,13 +428,27 @@ openerp.web_widget_x2many_2d_matrix = function(instance)
         {
             var $this = jQuery(e.currentTarget),
                 val = $this.val();
+                val_sub = val.substring(1)
+                val_pre = val.substring(0,1)
             if(this.validate_xy_value(val))
             {
                 var data = {}, value = this.parse_xy_value(val);
                 data[this.field_value] = value;
+                data[this.boolean_field_value] = false;
 
                 $this.siblings('.read').text(this.format_xy_value(value));
                 $this.val(this.format_xy_value(value));
+
+                this.dataset.write($this.data('id'), data);
+                $this.parent().removeClass('oe_form_invalid');
+                this.compute_totals();
+            }
+            else if(this.validate_xy_value(val_sub) && val_pre == '*'){
+                var data = {}, value = this.parse_xy_value(val_sub);
+                data[this.field_value] = value;
+                data[this.boolean_field_value] = true;
+
+                $this.siblings('.read').text(val);
 
                 this.dataset.write($this.data('id'), data);
                 $this.parent().removeClass('oe_form_invalid');
