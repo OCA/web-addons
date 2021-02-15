@@ -4,15 +4,10 @@
     "category": "Web",
     "summary": "",
     "license": "LGPL-3",
-    "author": "Odoo Community Association (OCA)"
-              "Sergei Ruzki,",
+    "author": "Odoo Community Association (OCA)," "Sergei Ruzki,",
     "website": "http://bigdata.by/",
-    "depends": [
-        "web",
-    ],
-    "data": [
-        "views/templates.xml",
-    ],
+    "depends": ["web",],
+    "data": ["views/templates.xml",],
     "qweb": [],
     "installable": True,
     "application": False,

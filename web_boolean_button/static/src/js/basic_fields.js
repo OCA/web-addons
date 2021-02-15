@@ -1,4 +1,4 @@
-odoo.define("web.boolean_button_widget", function (require) {
+odoo.define("web.boolean_button_widget", function(require) {
     "use strict";
 
     var AbstractField = require("web.AbstractField");
@@ -19,7 +19,7 @@ odoo.define("web.boolean_button_widget", function (require) {
          *
          * @override
          */
-        isSet: function () {
+        isSet: function() {
             return true;
         },
 
@@ -35,7 +35,7 @@ odoo.define("web.boolean_button_widget", function (require) {
          * @private
          */
 
-        _render: function () {
+        _render: function() {
             this.$el.empty();
             var text, hover;
             switch (this.nodeOptions.terminology) {
