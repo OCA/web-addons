@@ -37,7 +37,8 @@ odoo.define("web.boolean_button_widget", function(require) {
 
         _render: function() {
             this.$el.empty();
-            var text = null, hover = null;
+            var text = null,
+                hover = null;
             switch (this.nodeOptions.terminology) {
                 case "active":
                     text = this.value ? _t("Active") : _t("Inactive");
