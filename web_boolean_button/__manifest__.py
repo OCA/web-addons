@@ -1,10 +1,10 @@
 {
     "name": "Boolean Button Widget",
-    "version": "13.0.0.1.0",
+    "version": "13.0.1.0.0",
     "category": "Web",
-    "summary": "",
+    "summary": "Boolean Button Widget for Forms with legend",
     "license": "LGPL-3",
-    "author": "Odoo Community Association (OCA)," "Sergei Ruzki,",
+    "author": "Bigdata BY, Odoo SA, Odoo Community Association (OCA)",
     "website": "http://bigdata.by/",
     "depends": ["web"],
     "data": ["views/templates.xml"],
