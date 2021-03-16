@@ -12,7 +12,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
     var widgetRegistry = require("web.widget_registry");
     var tools = require("web_widget_one2many_product_picker.tools");
     var ProductPickerQuickModifPriceForm = require("web_widget_one2many_product_picker.ProductPickerQuickModifPriceForm");
-    var FieldManagerMixin = require("web.FieldManagerMixin");
+    var config = require("web.config");
 
     var qweb = core.qweb;
     var _t = core._t;
@@ -101,6 +101,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
          * new one.
          *
          * @param {Object} state
+         * @returns {Promise}
          */
         recreate: function(state) {
             if (state) {
@@ -138,6 +139,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
          *
          * @private
          * @param {String} price_field
+         * @returns {String}
          */
         _getMonetaryFieldValue: function(price_field) {
             var field_name = this.options.fieldMap[price_field];
@@ -303,7 +305,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
          * @private
          * @param {jQueryElement} $container
          */
-        _processWidgetFields: function($container, widget_list) {
+        _processWidgetFields: function($container) {
             var self = this;
             $container.find("field").each(function() {
                 var $field = $(this);
@@ -329,7 +331,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
                         if (Widget) {
                             widget = self._processWidget($field, field_name, Widget);
                             self.subWidgets[field_name] = widget;
-                        } else if (config.debug) {
+                        } else if (config.isDebug()) {
                             // The widget is not implemented
                             $field.replaceWith(
                                 $("<span>", {
@@ -387,6 +389,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
          *
          * @private
          * @param {jQueryElement} $container
+         * @param {String} widget_zone
          */
         _processWidgets: function($container, widget_zone) {
             var self = this;
@@ -436,7 +439,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
          * text: 20 Items
          *
          * @private
-         * @param {Array[String]} fields
+         * @param {Array} fields
          */
         _processDynamicFields: function(fields) {
             if (!this.state) {
@@ -600,6 +603,8 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
 
         /**
          * @private
+         * @param {Selector/HTMLElement} target
+         * @param {Selector/HTMLElement} currentTarget
          */
         _doInteractAnim: function(target, currentTarget) {
             var $target = $(target);
@@ -788,6 +793,7 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
 
         /**
          * @private
+         * @param {CustomEvent} evt
          */
         _onRestoreFlipCard: function(evt) {
             var self = this;

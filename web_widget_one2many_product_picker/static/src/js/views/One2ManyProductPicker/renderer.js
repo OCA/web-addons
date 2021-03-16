@@ -79,6 +79,8 @@ odoo.define(
 
             /**
              * @param {Object} search_data
+             * @param {Number} count
+             * @param {Object} search_group
              */
             updateSearchData: function(search_data, count, search_group) {
                 this.search_data = search_data;
@@ -132,7 +134,8 @@ odoo.define(
 
             /**
              * @private
-             * @param {Array[Object]} states
+             * @param {Array} states
+             * @param {Array} new_states
              * @returns {Deferred}
              */
             _removeRecords: function(states, new_states) {
@@ -178,7 +181,7 @@ odoo.define(
 
                     if (!found) {
                         // Get the new state ID if exists to link it with the new record
-                        var new_state_id = undefined;
+                        var new_state_id = null;
                         for (var eb = new_states.length - 1; eb >= 0; --eb) {
                             var state = new_states[eb];
                             if (
@@ -371,8 +374,8 @@ odoo.define(
              * Link a current state with the 'search record'.
              *
              * @private
-             * @param {Array[Object]} results
-             * @returns {Array[Object]}
+             * @param {Array} results
+             * @returns {Array}
              */
             _processSearchRecords: function(results) {
                 var field_name = this.options.field_map.product;
@@ -444,7 +447,7 @@ odoo.define(
              * Generates the 'Product Card' per record.
              *
              * @private
-             * @param {Array[Object]} search_records
+             * @param {Array} search_records
              * @param {Boolean} no_process_records
              * @param {Number} position
              */
@@ -506,11 +509,11 @@ odoo.define(
             /**
              * Append search records to the view
              *
-             * @param {Array[Object]} search_records
+             * @param {Array} search_records
              * @param {Boolean} no_attach_widgets
              * @param {Boolean} no_process_records
              * @param {Number} position
-             * @returns {Array[Deferred]}
+             * @returns {Array}
              */
             appendSearchRecords: function(
                 search_records,

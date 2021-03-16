@@ -18,7 +18,6 @@ odoo.define(
 
         BasicModel.include({
             _applyOnChange: function(values, record, viewType) {
-                var vt = viewType || record.viewType;
                 // Ignore changes by record context 'ignore_onchanges' fields
                 if ("ignore_onchanges" in record.context) {
                     var ignore_changes = record.context.ignore_onchanges;
@@ -87,6 +86,8 @@ odoo.define(
                  *  - record: Normal
                  *  - new: Is a new record
                  *  - dirty: Has changes
+                 *
+                 * @returns {Object}
                  */
                 _getRecordState: function() {
                     var record = this.model.get(this.handle);
@@ -160,7 +161,7 @@ odoo.define(
 
                 /**
                  * @private
-                 * @param {Array[String]} fields_changed
+                 * @param {Array} fields_changed
                  * @returns {Boolean}
                  */
                 _needReloadCard: function(fields_changed) {
@@ -195,7 +196,13 @@ odoo.define(
                             compareValue: new_value,
                         };
                         var record = this.model.get(this.handle);
-                        if (!("base_record_id" in record.context)) {
+                        if ("base_record_id" in record.context) {
+                            reload_values.baseRecordID = record.context.base_record_id;
+                            reload_values.baseRecordResID =
+                                record.context.base_record_res_id;
+                            reload_values.baseRecordCompareValue =
+                                record.context.base_record_compare_value;
+                        } else {
                             var old_value = record.data[this.compareKey];
                             if (typeof old_value === "object") {
                                 old_value = old_value.data.id;
@@ -203,12 +210,6 @@ odoo.define(
                             reload_values.baseRecordID = record.id;
                             reload_values.baseRecordResID = record.ref;
                             reload_values.baseRecordCompareValue = old_value;
-                        } else {
-                            reload_values.baseRecordID = record.context.base_record_id;
-                            reload_values.baseRecordResID =
-                                record.context.base_record_res_id;
-                            reload_values.baseRecordCompareValue =
-                                record.context.base_record_compare_value;
                         }
                         this.trigger_up("reload_view", reload_values);
 

@@ -620,7 +620,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                     if (self.options.auto_save) {
                         self.parent_controller
                             .saveRecord(undefined, {stayInEdit: true})
-                            .then(function(rrr) {
+                            .then(function() {
                                 // Because 'create' generates a new state and we can't know these new id we
                                 // need force update the all the current states.
                                 self._setValue(
@@ -710,6 +710,8 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
 
         /**
          * Handle auto_save when remove a record
+         *
+         * @param {CustomEvent} evt
          */
         _onListRecordRemove: function(evt) {
             evt.stopPropagation();
@@ -784,8 +786,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          *
          * @override
          */
-
-        _setValue: function(value, options) {
+        _setValue: function() {
             var self = this;
             return this._super.apply(this, arguments).then(function() {
                 self.updateBadgeLines();

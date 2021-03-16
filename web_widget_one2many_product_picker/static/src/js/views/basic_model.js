@@ -100,13 +100,14 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          *
          * @override
          */
-        _performOnChange: function(record, fields, viewType) {
+        _performOnChange: function(record) {
             if (record.context && record.context.ignore_warning) {
                 var this_mp = _.clone(this);
                 var super_call = this.trigger_up;
                 this_mp.trigger_up = function(event_name, data) {
                     if (event_name === "warning" && data.type === "dialog") {
-                        return; // Do nothing
+                        // Do nothing
+                        return;
                     }
                     return super_call.apply(this, arguments);
                 }.bind(this);
