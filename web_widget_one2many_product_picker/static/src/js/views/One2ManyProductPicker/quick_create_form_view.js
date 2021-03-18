@@ -256,10 +256,12 @@ odoo.define(
                             success_callback: function() {
                                 self.trigger_up("create_quick_record", {
                                     id: record.id,
+                                    callback: function() {
+                                        self.model.unsetDirty(self.handle);
+                                        // Self._updateButtons();
+                                        self._enableQuickCreate();
+                                    },
                                 });
-                                self.model.unsetDirty(self.handle);
-                                // Self._updateButtons();
-                                self._enableQuickCreate();
                             },
                             block: true,
                         });
@@ -268,7 +270,6 @@ odoo.define(
 
                 _remove: function() {
                     if (this._disabled) {
-                        // Don't do anything if we are already creating a record
                         return $.Deferred();
                     }
 
@@ -296,10 +297,12 @@ odoo.define(
                         success_callback: function() {
                             self.trigger_up("update_quick_record", {
                                 id: record.id,
+                                callback: function() {
+                                    self.model.unsetDirty(self.handle);
+                                    // Self._updateButtons();
+                                    self._enableQuickCreate();
+                                },
                             });
-                            self.model.unsetDirty(self.handle);
-                            // Self._updateButtons();
-                            self._enableQuickCreate();
                         },
                         block: true,
                     });
