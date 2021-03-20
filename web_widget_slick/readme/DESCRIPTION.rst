@@ -1,0 +1,1 @@
+This module provides a Slick Carousel widget for use in the Odoo backend web interface.
