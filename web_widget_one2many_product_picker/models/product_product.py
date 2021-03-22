@@ -8,14 +8,14 @@ class ProductProduct(models.Model):
 
     image_variant_medium = fields.Binary(
         "Variant Image Medium (Related)",
-        related="image_variant_512",
+        related="image_512",
         help="This field holds the image used as image for the product variant"
         "or product image medium, limited to 512x512px.",
     )
 
     image_variant_big = fields.Binary(
         "Variant Image Big (Related)",
-        related="image_variant_1920",
+        related="image_1024",
         help="This field holds the image used as image for the product variant"
         "or product image, limited to 1024x1024px.",
     )

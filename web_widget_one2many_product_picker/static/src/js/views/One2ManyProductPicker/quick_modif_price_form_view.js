@@ -10,25 +10,24 @@ odoo.define(
          * is used by the RecordQuickCreate in One2ManyProductPicker views.
          */
 
-        var QuickCreateFormView = require("web.QuickCreateFormView");
-        var core = require("web.core");
-        var tools = require("web_widget_one2many_product_picker.tools");
+        const QuickCreateFormView = require("web.QuickCreateFormView");
+        const core = require("web.core");
+        const tools = require("web_widget_one2many_product_picker.tools");
 
-        var qweb = core.qweb;
+        const qweb = core.qweb;
 
-        var ProductPickerQuickModifPriceFormRenderer = QuickCreateFormView.prototype.config.Renderer.extend(
+        const ProductPickerQuickModifPriceFormRenderer = QuickCreateFormView.prototype.config.Renderer.extend(
             {
                 /**
                  * @override
                  */
                 start: function() {
-                    var self = this;
                     this.$el.addClass(
                         "oe_one2many_product_picker_form_view o_xxs_form_view"
                     );
-                    return this._super.apply(this, arguments).then(function() {
-                        self._appendPrice();
-                        self._appendButtons();
+                    return this._super.apply(this, arguments).then(() => {
+                        this._appendPrice();
+                        this._appendButtons();
                     });
                 },
 
@@ -59,7 +58,7 @@ odoo.define(
             }
         );
 
-        var ProductPickerQuickModifPriceFormController = QuickCreateFormView.prototype.config.Controller.extend(
+        const ProductPickerQuickModifPriceFormController = QuickCreateFormView.prototype.config.Controller.extend(
             {
                 events: _.extend({}, QuickCreateFormView.prototype.events, {
                     "click .oe_record_change": "_onClickChange",
@@ -81,9 +80,8 @@ odoo.define(
                  * @override
                  */
                 start: function() {
-                    var self = this;
-                    return this._super.apply(this, arguments).then(function() {
-                        self._updatePrice();
+                    return this._super.apply(this, arguments).then(() => {
+                        this._updatePrice();
                     });
                 },
 
@@ -99,8 +97,8 @@ odoo.define(
                  * @private
                  */
                 _updatePrice: function() {
-                    var record = this.model.get(this.handle);
-                    var price_reduce = tools.priceReduce(
+                    const record = this.model.get(this.handle);
+                    const price_reduce = tools.priceReduce(
                         record.data[this.fieldMap.price_unit],
                         record.data[this.fieldMap.discount]
                     );
@@ -145,12 +143,11 @@ odoo.define(
                  * @param {MouseEvent} ev
                  */
                 _onClickChange: function(ev) {
-                    var self = this;
                     ev.stopPropagation();
                     this.model.updateRecordContext(this.handle, {
                         has_changes_confirmed: true,
                     });
-                    var is_virtual = this.model.isPureVirtual(this.handle);
+                    const is_virtual = this.model.isPureVirtual(this.handle);
 
                     // If is a 'pure virtual' record, save it in the selected list
                     if (is_virtual) {
@@ -161,25 +158,25 @@ odoo.define(
                                 reload: true,
                                 savePoint: true,
                                 viewType: "form",
-                            }).then(function() {
-                                self._enableQuickCreate();
-                                var record = self.model.get(self.handle);
-                                self.model.unsetDirty(self.handle);
-                                self.trigger_up("create_quick_record", {
+                            }).then(() => {
+                                this._enableQuickCreate();
+                                const record = this.model.get(this.handle);
+                                this.model.unsetDirty(this.handle);
+                                this.trigger_up("create_quick_record", {
                                     id: record.id,
                                 });
-                                self.getParent().destroy();
+                                this.getParent().destroy();
                             });
                         } else {
                             this.getParent().destroy();
                         }
                     } else {
                         // If is a "normal" record, update it
-                        var record = this.model.get(this.handle);
+                        const record = this.model.get(this.handle);
                         this.trigger_up("update_quick_record", {
                             id: record.id,
                         });
-                        self.model.unsetDirty(self.handle);
+                        this.model.unsetDirty(this.handle);
                         this.getParent().destroy();
                     }
                 },
@@ -193,7 +190,7 @@ odoo.define(
                     this.model.discardChanges(this.handle, {
                         rollback: true,
                     });
-                    var record = this.model.get(this.handle);
+                    const record = this.model.get(this.handle);
                     this.trigger_up("update_quick_record", {
                         id: record.id,
                     });
@@ -202,7 +199,7 @@ odoo.define(
             }
         );
 
-        var ProductPickerQuickModifPriceFormView = QuickCreateFormView.extend({
+        const ProductPickerQuickModifPriceFormView = QuickCreateFormView.extend({
             config: _.extend({}, QuickCreateFormView.prototype.config, {
                 Renderer: ProductPickerQuickModifPriceFormRenderer,
                 Controller: ProductPickerQuickModifPriceFormController,

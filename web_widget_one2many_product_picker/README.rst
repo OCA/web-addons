@@ -23,7 +23,7 @@ Web Widget One2Many Product Picker
     :target: https://runbot.odoo-community.org/runbot/162/13.0
     :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3| |badge4| |badge5| 
+|badge1| |badge2| |badge3| |badge4| |badge5|
 
 Adds the 'one2many_product_picker' friendly mobile widget to create one2many lines linked with product.product records.
 

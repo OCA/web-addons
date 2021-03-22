@@ -5,17 +5,17 @@ odoo.define(
     function(require) {
         "use strict";
 
-        var core = require("web.core");
-        var Widget = require("web.Widget");
-        var ProductPickerQuickModifPriceFormView = require("web_widget_one2many_product_picker.ProductPickerQuickModifPriceFormView")
+        const core = require("web.core");
+        const Widget = require("web.Widget");
+        const ProductPickerQuickModifPriceFormView = require("web_widget_one2many_product_picker.ProductPickerQuickModifPriceFormView")
             .ProductPickerQuickModifPriceFormView;
 
-        var qweb = core.qweb;
+        const qweb = core.qweb;
 
         /**
          * This widget render a Form. Used by FieldOne2ManyProductPicker
          */
-        var ProductPickerQuickModifPriceForm = Widget.extend({
+        const ProductPickerQuickModifPriceForm = Widget.extend({
             className: "oe_one2many_product_picker_quick_modif_price",
             xmlDependencies: [
                 "/web_widget_one2many_product_picker/static/src/xml/one2many_product_picker_quick_modif_price.xml",
@@ -47,9 +47,8 @@ odoo.define(
              * @override
              */
             start: function() {
-                var self = this;
-                var def1 = this._super.apply(this, arguments);
-                var fieldsView = {
+                const def1 = this._super.apply(this, arguments);
+                const fieldsView = {
                     arch: this._generateFormArch(),
                     fields: this.fields,
                     viewFields: this.fields,
@@ -78,13 +77,13 @@ odoo.define(
                 if (this.id) {
                     this.basicFieldParams.model.save(this.id, {savePoint: true});
                 }
-                var def2 = this.formView.getController(this).then(function(controller) {
-                    self.controller = controller;
-                    self.$el.empty();
-                    self.controller.appendTo(self.$el);
+                const def2 = this.formView.getController(this).then(controller => {
+                    this.controller = controller;
+                    this.$el.empty();
+                    this.controller.appendTo(this.$el);
                 });
 
-                return $.when(def1, def2);
+                return Promise.all([def1, def2]);
             },
 
             /**
@@ -103,31 +102,33 @@ odoo.define(
              * @returns {String}
              */
             _generateFormArch: function() {
-                var wanted_field_states = this._getWantedFieldState();
-                var template =
+                const wanted_field_states = this._getWantedFieldState();
+                let template =
                     "<templates><t t-name='One2ManyProductPicker.QuickModifPrice.Form'>";
                 template += this.basicFieldParams.field.views.form.arch;
                 template += "</t></templates>";
                 qweb.add_template(template);
-                var $arch = $(
+                const $arch = $(
                     qweb.render("One2ManyProductPicker.QuickModifPrice.Form", {
                         field_map: this.fieldMap,
                         record_search: this.searchRecord,
                     })
                 );
 
-                var field_names = Object.keys(wanted_field_states);
-                var gen_arch = "<form><group>";
-                for (var index in field_names) {
-                    var field_name = field_names[index];
-                    var $field = $arch.find("field[name='" + field_name + "']");
-                    var modifiers = $field.attr("modifiers")
+                const field_names = Object.keys(
+                    this.basicFieldParams.field.views.form.fields
+                );
+                let gen_arch = "<form><group>";
+                for (const index in field_names) {
+                    const field_name = field_names[index];
+                    const $field = $arch.find("field[name='" + field_name + "']");
+                    const modifiers = $field.attr("modifiers")
                         ? JSON.parse($field.attr("modifiers"))
                         : {};
-                    modifiers.invisible = false;
+                    modifiers.invisible = !(field_name in wanted_field_states);
                     modifiers.readonly = wanted_field_states[field_name];
                     $field.attr("modifiers", JSON.stringify(modifiers));
-                    $field.attr("invisible", "0");
+                    $field.attr("invisible", modifiers.invisible ? "1" : "0");
                     $field.attr(
                         "readonly",
                         wanted_field_states[field_name] ? "1" : "0"
@@ -146,7 +147,7 @@ odoo.define(
              * @returns {Object}
              */
             _getWantedFieldState: function() {
-                var wantedFieldState = {};
+                const wantedFieldState = {};
                 wantedFieldState[this.fieldMap.discount] = !this.canEditDiscount;
                 wantedFieldState[this.fieldMap.price_unit] = !this.canEditPrice;
                 return wantedFieldState;
