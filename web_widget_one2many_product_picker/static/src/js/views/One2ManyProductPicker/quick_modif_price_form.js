@@ -20,6 +20,10 @@ odoo.define(
             xmlDependencies: [
                 "/web_widget_one2many_product_picker/static/src/xml/one2many_product_picker_quick_modif_price.xml",
             ],
+            events: {
+                "click .oe_record_change": "_onClickChange",
+                "click .oe_record_discard": "_onClickDiscard",
+            },
 
             /**
              * @override
@@ -79,8 +83,9 @@ odoo.define(
                 }
                 const def2 = this.formView.getController(this).then(controller => {
                     this.controller = controller;
-                    this.$el.empty();
-                    this.controller.appendTo(this.$el);
+                    this.$(".modal-body").empty();
+                    this.controller.appendTo(this.$(".modal-body"));
+                    this.$el.on("hidden.bs.modal", this._onModalHidden.bind(this));
                 });
 
                 return Promise.all([def1, def2]);
@@ -90,6 +95,7 @@ odoo.define(
              * @override
              */
             destroy: function() {
+                this.$el.off("hidden.bs.modal");
                 this._super.apply(this, arguments);
             },
 
@@ -151,6 +157,90 @@ odoo.define(
                 wantedFieldState[this.fieldMap.discount] = !this.canEditDiscount;
                 wantedFieldState[this.fieldMap.price_unit] = !this.canEditPrice;
                 return wantedFieldState;
+            },
+
+            /**
+             * @private
+             */
+            _onModalHidden: function() {
+                this.destroy();
+            },
+
+            /**
+             * @private
+             * @param {MouseEvent} ev
+             */
+            _onClickChange: function(ev) {
+                ev.stopPropagation();
+                const model = this.basicFieldParams.model;
+                model.updateRecordContext(this.id, {
+                    has_changes_confirmed: true,
+                });
+                const is_virtual = model.isPureVirtual(this.id);
+
+                // If is a 'pure virtual' record, save it in the selected list
+                if (is_virtual) {
+                    if (model.isDirty(this.id)) {
+                        this._disableQuickCreate();
+                        this.controller
+                            .saveRecord(this.id, {
+                                stayInEdit: true,
+                                reload: true,
+                                savePoint: true,
+                                viewType: "form",
+                            })
+                            .then(() => {
+                                this._enableQuickCreate();
+                                model.unsetDirty(this.id);
+                                this.trigger_up("create_quick_record", {
+                                    id: this.id,
+                                });
+                            });
+                    }
+                } else {
+                    // If is a "normal" record, update it
+                    this.trigger_up("update_quick_record", {
+                        id: this.id,
+                    });
+                    model.unsetDirty(this.id);
+                }
+            },
+
+            /**
+             * @private
+             * @param {MouseEvent} ev
+             */
+            _onClickDiscard: function(ev) {
+                ev.stopPropagation();
+                const model = this.basicFieldParams.model;
+                model.discardChanges(this.id, {
+                    rollback: true,
+                });
+                this.trigger_up("update_quick_record", {
+                    id: this.id,
+                });
+            },
+
+            /**
+             * @private
+             */
+            _disableQuickCreate: function() {
+                // Ensures that the record won't be created twice
+                this.$el.addClass("o_disabled");
+                this.$("input:not(:disabled),button:not(:disabled)")
+                    .addClass("o_temporarily_disabled")
+                    .attr("disabled", "disabled");
+            },
+
+            /**
+             * @private
+             */
+            _enableQuickCreate: function() {
+                // Allows to create again
+                this.$el.removeClass("o_disabled");
+                this.$("input.o_temporarily_disabled,button.o_temporarily_disabled")
+                    .removeClass("o_temporarily_disabled")
+                    .attr("disabled", false);
             },
         });
 

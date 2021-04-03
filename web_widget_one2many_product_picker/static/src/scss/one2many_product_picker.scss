@@ -231,19 +231,3 @@
         }
     }
 }
-
-.oe_product_picker_quick_modif_price {
-    width: 80%;
-    max-width: $one2many-product-picker-quick-modif-price-max-width;
-    margin: auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid $border-color;
-    z-index: 55;
-
-    .oe_one2many_product_picker_form_buttons {
-        text-align: center;
-    }
-}

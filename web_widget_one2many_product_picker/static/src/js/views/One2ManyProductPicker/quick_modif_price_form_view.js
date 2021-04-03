@@ -27,23 +27,7 @@ odoo.define(
                     );
                     return this._super.apply(this, arguments).then(() => {
                         this._appendPrice();
-                        this._appendButtons();
                     });
-                },
-
-                /**
-                 * @private
-                 */
-                _appendButtons: function() {
-                    this.$el.find(".oe_one2many_product_picker_form_buttons").remove();
-                    this.$el.append(
-                        qweb.render(
-                            "One2ManyProductPicker.QuickModifPrice.FormButtons",
-                            {
-                                mode: this.mode,
-                            }
-                        )
-                    );
                 },
 
                 /**
@@ -60,11 +44,6 @@ odoo.define(
 
         const ProductPickerQuickModifPriceFormController = QuickCreateFormView.prototype.config.Controller.extend(
             {
-                events: _.extend({}, QuickCreateFormView.prototype.events, {
-                    "click .oe_record_change": "_onClickChange",
-                    "click .oe_record_discard": "_onClickDiscard",
-                }),
-
                 /**
                  * @override
                  */
@@ -81,26 +60,28 @@ odoo.define(
                  */
                 start: function() {
                     return this._super.apply(this, arguments).then(() => {
-                        this._updatePrice();
+                        const record = this.model.get(this.handle);
+                        this._updatePrice(record.data);
                     });
                 },
 
                 /**
                  * @override
                  */
-                _onFieldChanged: function() {
+                _onFieldChanged: function(ev) {
                     this._super.apply(this, arguments);
-                    this._updatePrice();
+                    const record = this.model.get(this.handle);
+                    this._updatePrice(_.extend({}, record.data, ev.data.changes));
                 },
 
                 /**
                  * @private
+                 * @param {Object} values
                  */
-                _updatePrice: function() {
-                    const record = this.model.get(this.handle);
+                _updatePrice: function(values) {
                     const price_reduce = tools.priceReduce(
-                        record.data[this.fieldMap.price_unit],
-                        record.data[this.fieldMap.discount]
+                        values[this.fieldMap.price_unit],
+                        values[this.fieldMap.discount]
                     );
                     this.renderer.$el
                         .find(".oe_price")
@@ -109,92 +90,9 @@ odoo.define(
                                 price_reduce,
                                 this.getParent().state.fields[this.fieldMap.price_unit],
                                 this.currencyField,
-                                record
+                                values
                             )
                         );
-                },
-
-                /**
-                 * @private
-                 */
-                _disableQuickCreate: function() {
-                    // Ensures that the record won't be created twice
-                    this._disabled = true;
-                    this.$el.addClass("o_disabled");
-                    this.$("input:not(:disabled)")
-                        .addClass("o_temporarily_disabled")
-                        .attr("disabled", "disabled");
-                },
-
-                /**
-                 * @private
-                 */
-                _enableQuickCreate: function() {
-                    // Allows to create again
-                    this._disabled = false;
-                    this.$el.removeClass("o_disabled");
-                    this.$("input.o_temporarily_disabled")
-                        .removeClass("o_temporarily_disabled")
-                        .attr("disabled", false);
-                },
-
-                /**
-                 * @private
-                 * @param {MouseEvent} ev
-                 */
-                _onClickChange: function(ev) {
-                    ev.stopPropagation();
-                    this.model.updateRecordContext(this.handle, {
-                        has_changes_confirmed: true,
-                    });
-                    const is_virtual = this.model.isPureVirtual(this.handle);
-
-                    // If is a 'pure virtual' record, save it in the selected list
-                    if (is_virtual) {
-                        if (this.model.isDirty(this.handle)) {
-                            this._disableQuickCreate();
-                            this.saveRecord(this.handle, {
-                                stayInEdit: true,
-                                reload: true,
-                                savePoint: true,
-                                viewType: "form",
-                            }).then(() => {
-                                this._enableQuickCreate();
-                                const record = this.model.get(this.handle);
-                                this.model.unsetDirty(this.handle);
-                                this.trigger_up("create_quick_record", {
-                                    id: record.id,
-                                });
-                                this.getParent().destroy();
-                            });
-                        } else {
-                            this.getParent().destroy();
-                        }
-                    } else {
-                        // If is a "normal" record, update it
-                        const record = this.model.get(this.handle);
-                        this.trigger_up("update_quick_record", {
-                            id: record.id,
-                        });
-                        this.model.unsetDirty(this.handle);
-                        this.getParent().destroy();
-                    }
-                },
-
-                /**
-                 * @private
-                 * @param {MouseEvent} ev
-                 */
-                _onClickDiscard: function(ev) {
-                    ev.stopPropagation();
-                    this.model.discardChanges(this.handle, {
-                        rollback: true,
-                    });
-                    const record = this.model.get(this.handle);
-                    this.trigger_up("update_quick_record", {
-                        id: record.id,
-                    });
-                    this.getParent().destroy();
                 },
             }
         );

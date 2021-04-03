@@ -194,7 +194,34 @@
             </div>
         </div>
     </t>
-    <t t-name="One2ManyProductPicker.QuickModifPricePopup">
-        <div class="oe_product_picker_quick_modif_price shadow" />
+    <t t-name="One2ManyProductPicker.QuickModifPrice.Modal">
+        <div
+            class="oe_product_picker_quick_modif_price modal fade"
+            id="One2ManyProductPickerQuickModifPrice"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="One2ManyProductPickerQuickModifPriceLabel"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body p-0" />
+                    <div class="modal-footer">
+                        <button
+                            class="btn btn-success oe_record_change mr-auto"
+                            data-dismiss="modal"
+                        >
+                            <i class="fa fa-check" />
+                        </button>
+                        <button
+                            class="btn btn-warning oe_record_discard"
+                            data-dismiss="modal"
+                        >
+                            <i class="fa fa-times" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </t>
 </template>

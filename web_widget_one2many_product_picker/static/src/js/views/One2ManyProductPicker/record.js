@@ -669,11 +669,12 @@ odoo.define("web_widget_one2many_product_picker.One2ManyProductPickerRecord", fu
                 canEditDiscount: this.options.editDiscount,
                 currencyField: this.options.currencyField,
             });
-            this.$modifPricePopup = $(
-                qweb.render("One2ManyProductPicker.QuickModifPricePopup")
+            this.$modifPriceModal = $(
+                qweb.render("One2ManyProductPicker.QuickModifPrice.Modal")
             );
-            this.$modifPricePopup.appendTo($(".o_content"));
-            modif_price_form.attachTo(this.$modifPricePopup);
+            this.$modifPriceModal.appendTo($(".oe_one2many_product_picker_view"));
+            modif_price_form.attachTo(this.$modifPriceModal);
+            this.$modifPriceModal.modal();
         },
 
         // HANDLE EVENTS
