@@ -63,6 +63,15 @@ odoo.define(
                 },
 
                 /**
+                 * @override
+                 */
+                _applyChanges: function() {
+                    return this._super.apply(this, arguments).then(() => {
+                        this._updateButtons();
+                    });
+                },
+
+                /**
                  * Create or accept changes
                  */
                 auto: function() {
@@ -227,7 +236,6 @@ odoo.define(
                             this.trigger_up("quick_record_updated", {
                                 changes: ev.data.changes,
                             });
-                            this._updateButtons();
                         }
                     }
                 },
@@ -261,7 +269,6 @@ odoo.define(
                                             saving: false,
                                         });
                                         this.model.unsetDirty(this.handle);
-                                        // Self._updateButtons();
                                         this._enableQuickCreate();
                                     },
                                 });
@@ -298,11 +305,15 @@ odoo.define(
 
                     this.trigger_up("restore_flip_card", {
                         success_callback: function() {
+                            // Qty are handled in a special way because can be modified without
+                            // wait for server response
+                            self.model.localData[record.id].data[
+                                self.fieldMap.product_uom_qty
+                            ] = record.data[self.fieldMap.product_uom_qty];
                             self.trigger_up("update_quick_record", {
                                 id: record.id,
                                 callback: function() {
                                     self.model.unsetDirty(self.handle);
-                                    // Self._updateButtons();
                                     self._enableQuickCreate();
                                 },
                             });

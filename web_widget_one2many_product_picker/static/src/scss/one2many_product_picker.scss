@@ -190,8 +190,14 @@
                     .o_form_view.o_form_nosheet {
                         padding: $one2many-product-picker-card-form-padding;
 
-                        .o_field_widget .o_input_dropdown > input {
-                            height: unset;
+                        .o_field_widget {
+                            &:not(.widget_numeric_step) {
+                                max-width: 95%;
+                            }
+
+                            .o_input_dropdown > input {
+                                height: unset;
+                            }
                         }
                     }
                 }

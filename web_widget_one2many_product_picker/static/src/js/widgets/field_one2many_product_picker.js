@@ -27,6 +27,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
             "click .oe_btn_lines": "_onClickLines",
             "click .oe_btn_search_group": "_onClickSearchGroup",
             "search .oe_search_input": "_onSearch",
+            "input .oe_search_input": "_onInputSearch",
             "focusin .oe_search_input": "_onFocusInSearch",
             "show.bs.dropdown .o_cp_buttons": "_onShowSearchDropdown",
             "click #product_picker_maximize": "_onClickMaximize",
@@ -41,9 +42,10 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
         }),
 
         _auto_search_delay: 450,
+        _input_instant_search_time: 150,
 
         // Model product.product fields
-        search_read_fields: ["id", "display_name"],
+        search_read_fields: ["id", "display_name", "uom_id"],
 
         /**
          * @override
@@ -79,25 +81,13 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
             if (this.view) {
                 this._processGroups();
             }
-        },
 
-        /**
-         * @override
-         */
-        willStart: function() {
-            if (!this.view) {
-                return Promise.resolve();
-            }
+            this._currentSearchBatchID = 0;
 
-            if (this.mode === "readonly") {
-                this._updateSearchContext(-1);
-            } else {
-                this._updateSearchContext(0);
-            }
-            return Promise.all([
-                this._super.apply(this, arguments),
-                this._getSearchRecords(),
-            ]);
+            this._lazyRenderSearchRecords = _.debounce(() => {
+                this.doRenderSearchRecords();
+                ++this._currentSearchBatchID;
+            }, this._input_instant_search_time);
         },
 
         /**
@@ -167,6 +157,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 recordData: this.recordData,
                 value: this.value,
                 relation_field: this.state.fields[this.name].relation_field,
+                current_batch_id: this._currentSearchBatchID,
             };
         },
 
@@ -252,21 +243,35 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          */
         _render: function() {
             const def = this._super.apply(this, arguments);
+            if (def) {
+                if (this.isReadonly) {
+                    // Show Lines
+                    this._updateSearchContext(-1);
+                } else {
+                    this._updateSearchContext(0);
+                }
 
-            // Parent implementation can return 'undefined' :(
-            return (
-                def &&
-                def.then(() => {
-                    if (
-                        !this.$el.hasClass("oe_field_one2many_product_picker_maximized")
-                    ) {
-                        this.$el.addClass("position-relative d-flex flex-column");
-                    }
+                // Check maximize state
+                if (!this.$el.hasClass("oe_field_one2many_product_picker_maximized")) {
+                    this.$el.addClass("position-relative d-flex flex-column");
+                }
+
+                return new Promise(resolve => {
+                    this._getSearchRecords()
+                        .then(records => {
+                            return this.renderer.appendSearchRecords(records, {
+                                cleanup: false,
+                            });
+                        })
+                        .then(() => resolve());
+                }).then(() => {
                     if (this.options.show_subtotal) {
                         this._addTotalsZone();
                     }
-                })
-            );
+                });
+            }
+
+            return def;
         },
 
         /**
@@ -274,10 +279,14 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          */
         doRenderSearchRecords: function() {
             return new Promise(resolve => {
-                this._getSearchRecords().then(() => {
-                    this.renderer.$el.scrollTop(0);
-                    this.renderer._renderView().then(() => resolve());
-                });
+                this._getSearchRecords()
+                    .then(records => {
+                        this.renderer.$el.scrollTop(0);
+                        return this.renderer.appendSearchRecords(records, {
+                            cleanup: true,
+                        });
+                    })
+                    .then(() => resolve());
             });
         },
 
@@ -311,7 +320,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          * @param {Boolean} merge
          * @returns {Deferred}
          */
-        _getSearchRecords: function(options, merge) {
+        _getSearchRecords: function(options) {
             const arch = this.view.arch;
             const search_mode = this.options.search[this._searchMode];
             const field_name = this.options.field_map.product;
@@ -367,24 +376,8 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 }
 
                 task.then(results => {
-                    if (merge) {
-                        this._searchRecords = _.union(
-                            this._searchRecords || [],
-                            results
-                        );
-                    } else {
-                        this._searchRecords = results;
-                    }
-                    this._lastSearchRecordsCount = results.length;
                     this._searchOffset = offset + limit;
-                    if (this.renderer) {
-                        this.renderer.updateSearchData(
-                            this._searchRecords,
-                            this._lastSearchRecordsCount,
-                            this._activeSearchGroup
-                        );
-                    }
-
+                    this.renderer.showLoadMore(limit && results.length === limit);
                     resolve(results);
                 });
             });
@@ -534,6 +527,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 auto_save: false,
                 ignore_warning: false,
                 all_domain: [],
+                instant_search: false,
             };
         },
 
@@ -614,6 +608,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 this._searchContext.order = [{name: "sequence"}, {name: "id"}];
                 this._searchContext.activeTest = false;
             }
+            this.renderer.updateSearchGroup(this._activeSearchGroup);
         },
 
         /**
@@ -621,6 +616,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          * that the search results. Use directy in-memory values.
          */
         showLines: function() {
+            this.renderer.clearRecords();
             this._updateSearchContext(-1);
             this._clearSearchInput();
             this.$btnLines
@@ -635,6 +631,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          * @param {Number} group_id
          */
         showGroup: function(group_id) {
+            this.renderer.clearRecords();
             this._updateSearchContext(group_id);
             this.doRenderSearchRecords();
             this.$btnLines.removeClass("active");
@@ -666,6 +663,15 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
         _onSearch: function(evt) {
             this._searchContext.text = evt.target.value;
             this.doRenderSearchRecords();
+        },
+
+        _onInputSearch: function(evt) {
+            if (!this.options.instant_search) {
+                return;
+            }
+            this._searchContext.text = evt.target.value;
+            this._lazyRenderSearchRecords();
+            // This.doRenderSearchRecords()
         },
 
         /**
@@ -707,7 +713,8 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          */
         _onCreateQuickRecord: function(evt) {
             evt.stopPropagation();
-            this.parent_controller.model.setPureVirtual(evt.data.id, false);
+            var model = this.parent_controller.model;
+            model.setPureVirtual(evt.data.id, false);
 
             if (this.options.auto_save) {
                 // Dont trigger state update
@@ -718,16 +725,15 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                     this.parent_controller
                         .saveRecord(undefined, {stayInEdit: true})
                         .then(() => {
-                            // Because 'create' generates a new state and we can't know these new id we
-                            // need force update all the current states.
-                            this._setValue(
-                                {operation: "UPDATE", id: evt.data.id},
-                                {doNotSetDirty: true}
-                            ).then(() => {
-                                if (evt.data.callback) {
-                                    evt.data.callback();
-                                }
-                            });
+                            self.renderer.updateState(
+                                model.get(self.parent_controller.handle).data[
+                                    self.name
+                                ],
+                                {force: true}
+                            );
+                            if (evt.data.callback) {
+                                evt.data.callback();
+                            }
                         });
                     if (evt.data.callback) {
                         evt.data.callback();
@@ -758,21 +764,15 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                     self.parent_controller
                         .saveRecord(undefined, {stayInEdit: true})
                         .then(function() {
-                            // Workaround to get updated values
-                            self.parent_controller.model
-                                .reload(self.value.id)
-                                .then(function(result) {
-                                    var new_data = self.parent_controller.model.get(
-                                        result
-                                    );
-                                    self.value.data = new_data.data;
-                                    self.renderer.updateState(self.value, {
-                                        force: true,
-                                    });
-                                    if (callback) {
-                                        callback();
-                                    }
-                                });
+                            self.renderer.updateState(
+                                self.parent_controller.model.get(
+                                    self.parent_controller.handle
+                                ).data[self.name],
+                                {force: true}
+                            );
+                            if (callback) {
+                                callback();
+                            }
                         });
                     if (callback) {
                         callback();
@@ -844,12 +844,9 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
             if (this._isLoading) {
                 return;
             }
-            this._getSearchRecords(
-                {
-                    offset: this._searchOffset,
-                },
-                true
-            ).then(records => {
+            this._getSearchRecords({
+                offset: this._searchOffset,
+            }).then(records => {
                 this.renderer.appendSearchRecords(records);
             });
         },
@@ -872,7 +869,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
          */
         _blockControlPanel: function(block) {
             if (this.$buttons) {
-                this.$buttons.find("input,button").attr("disabled", block);
+                this.$buttons.find("button").attr("disabled", block);
             }
         },
 
