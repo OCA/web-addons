@@ -14,10 +14,10 @@ odoo.define("web_pwa_cache.view_dialogs", function(require) {
                 _.isEmpty(this.options.fields_view)
             ) {
                 this.options.fields_view = this.loadFieldView(
-                    this.dataset,
+                    this.res_model,
+                    this.context,
                     this.options.view_id,
-                    "formPWA"
-                );
+                    'formPWA');
                 this.options.fields_view.form = this.options.fields_view.formPWA;
                 delete this.options.fields_view.formPWA;
             }
