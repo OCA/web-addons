@@ -50,11 +50,8 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
         /**
          * @override
          */
-        init: function(parent, name, record) {
+        init: function(parent) {
             this._super.apply(this, arguments);
-
-            // This is the parent state
-            this.state = record;
 
             // Use jquery 'extend' to have a 'deep' merge.
             this.options = $.extend(
@@ -90,11 +87,22 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
             }, this._input_instant_search_time);
         },
 
+        willStart: function() {
+            return this._super.apply(this, arguments).then(() => {
+                if (this.isReadonly) {
+                    // Show Lines
+                    this._updateSearchContext(-1);
+                } else {
+                    this._updateSearchContext(0);
+                }
+            });
+        },
+
         /**
          * Updates the lines counter badge
          */
         updateBadgeLines: function() {
-            const records = this.parent_controller.model.get(this.state.id).data[
+            const records = this.parent_controller.model.get(this.record.id).data[
                 this.name
             ].data;
             this.$badgeLines.text(records.length);
@@ -106,7 +114,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
             }
             let prices = [];
             const field_map = this.options.field_map;
-            const records = this.parent_controller.model.get(this.state.id).data[
+            const records = this.parent_controller.model.get(this.record.id).data[
                 this.name
             ].data;
             if (this.options.show_discount) {
@@ -135,7 +143,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 total,
                 this.value.fields[this.options.field_map.price_unit],
                 this.options.currency_field,
-                this.state.data
+                this.record.data
             );
             this.$totalZone.find(".total_price").html(total || 0.0);
         },
@@ -151,12 +159,12 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 domain: this.record.getDomain(this.recordParams),
                 field: this.field,
                 parentID: this.value.id,
-                state: this.state,
+                record: this.record,
                 model: this.parent_controller.model,
                 fieldName: this.name,
                 recordData: this.recordData,
                 value: this.value,
-                relation_field: this.state.fields[this.name].relation_field,
+                relation_field: this.record.fields[this.name].relation_field,
                 current_batch_id: this._currentSearchBatchID,
             };
         },
@@ -244,12 +252,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
         _render: function() {
             const def = this._super.apply(this, arguments);
             if (def) {
-                if (this.isReadonly) {
-                    // Show Lines
-                    this._updateSearchContext(-1);
-                } else {
-                    this._updateSearchContext(0);
-                }
+                this.renderer.updateSearchGroup(this._activeSearchGroup);
 
                 // Check maximize state
                 if (!this.$el.hasClass("oe_field_one2many_product_picker_maximized")) {
@@ -524,6 +527,7 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                     price_unit: "price_unit",
                     discount: "discount",
                 },
+                trigger_refresh_fields: ["partner_id", "currency_id"],
                 auto_save: false,
                 ignore_warning: false,
                 all_domain: [],
@@ -582,12 +586,17 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 return [];
             }
             const field_name = this.options.field_map.product;
-            const lines = this.parent_controller.model.get(this.state.id).data[
+            const lines = this.parent_controller.model.get(this.record.id).data[
                 this.name
             ].data;
-            const ids = _.map(lines, line => {
-                return line.data[field_name].data.id;
-            });
+            // Here only get lines with product_id assigned
+            // This happens beacuse sale.order has lines for sections/comments
+            const ids = _.chain(lines)
+                .filter(line => line.data[field_name] !== false)
+                .map(line => {
+                    return line.data[field_name].data.id;
+                })
+                .value();
             return [["id", "in", ids]];
         },
 
@@ -608,7 +617,9 @@ odoo.define("web_widget_one2many_product_picker.FieldOne2ManyProductPicker", fun
                 this._searchContext.order = [{name: "sequence"}, {name: "id"}];
                 this._searchContext.activeTest = false;
             }
-            this.renderer.updateSearchGroup(this._activeSearchGroup);
+            if (this.renderer) {
+                this.renderer.updateSearchGroup(this._activeSearchGroup);
+            }
         },
 
         /**

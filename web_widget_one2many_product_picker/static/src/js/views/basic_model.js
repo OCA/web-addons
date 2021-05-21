@@ -307,7 +307,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
         /**
          * Adds support to avoid show onchange warnings.
          * The implementation is a pure hack that clone
-         * the context and do a monkey path the
+         * the context and do a monkey patch to the
          * 'trigger_up' method.
          *
          * @override
@@ -326,6 +326,29 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 return this._super.apply(this_mp, arguments);
             }
             return this._super.apply(this, arguments);
+        },
+
+        /**
+         * This happens when the user discard main document changes (isn't a rollback)
+         *
+         * @override
+         */
+        discardChanges: function(id, options) {
+            this._super.apply(this, arguments);
+            options = options || {};
+            var isNew = this.isNew(id);
+            var rollback = "rollback" in options ? options.rollback : isNew;
+            if (rollback) {
+                return;
+            }
+            const element = this.localData[id];
+            this._visitChildren(element, function(elem) {
+                if (_.isEmpty(elem._changes)) {
+                    if (elem.context.product_picker_modified) {
+                        elem.context.product_picker_modified = false;
+                    }
+                }
+            });
         },
     });
 });

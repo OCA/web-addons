@@ -310,12 +310,20 @@ odoo.define(
                             self.model.localData[record.id].data[
                                 self.fieldMap.product_uom_qty
                             ] = record.data[self.fieldMap.product_uom_qty];
-                            self.trigger_up("update_quick_record", {
-                                id: record.id,
-                                callback: function() {
-                                    self.model.unsetDirty(self.handle);
-                                    self._enableQuickCreate();
-                                },
+                            // SaveRecord used to make a save point.
+                            self.saveRecord(self.handle, {
+                                stayInEdit: true,
+                                reload: true,
+                                savePoint: true,
+                                viewType: "form",
+                            }).then(() => {
+                                self.trigger_up("update_quick_record", {
+                                    id: record.id,
+                                    callback: function() {
+                                        self.model.unsetDirty(self.handle);
+                                        self._enableQuickCreate();
+                                    },
+                                });
                             });
                         },
                         block: true,
@@ -325,29 +333,30 @@ odoo.define(
                 _discard: function() {
                     if (this._disabled) {
                         // Don't do anything if we are already creating a record
-                        return Promise.resolve();
+                        return;
                     }
+
                     this._disableQuickCreate();
-                    const record = this.model.get(this.handle);
+                    this.model.updateRecordContext(this.handle, {
+                        has_changes_confirmed: true,
+                    });
+                    // Rollback to restore the save point
                     this.model.discardChanges(this.handle, {
                         rollback: true,
                     });
+                    const record = this.model.get(this.handle);
                     this.trigger_up("quick_record_updated", {
                         changes: record.data,
                     });
-                    if (this.model.isNew(record.id)) {
-                        this.update({}, {reload: false});
+
+                    this.update({}, {reload: false}).then(() => {
+                        if (!this.model.isNew(record.id)) {
+                            this.model.unsetDirty(this.handle);
+                        }
                         this.trigger_up("restore_flip_card");
                         this._updateButtons();
                         this._enableQuickCreate();
-                    } else {
-                        this.update({}, {reload: false}).then(() => {
-                            this.model.unsetDirty(this.handle);
-                            this.trigger_up("restore_flip_card");
-                            this._updateButtons();
-                            this._enableQuickCreate();
-                        });
-                    }
+                    });
                 },
 
                 /**
