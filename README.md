@@ -5,9 +5,15 @@
 
 <!-- /!\ do not modify above this line -->
 
-# web
+Web addons for Odoo
+===================
 
-TODO: add repo description.
+This project aims to deal with modules related to the webclient of Odoo. You'll find modules that:
+
+- Add facilities to the UI
+- Add widgets
+- Ease the import/export features
+- Generally add clientside functionality
 
 <!-- /!\ do not modify below this line -->
 
@@ -47,10 +53,14 @@ addon | version | summary
 
 [//]: # (end addons)
 
+Translation Status
+------------------
+[![Translation status](https://translation.odoo-community.org/widgets/web-12-0/-/multi-auto.svg)](https://translation.odoo-community.org/engage/web-12-0/?utm_source=widget)
+
 <!-- prettier-ignore-end -->
 
-## Licenses
-
+Licenses
+--------
 This repository is licensed under [AGPL-3.0](LICENSE).
 
 However, each module can have a totally different license, as long as they adhere to OCA
@@ -58,7 +68,6 @@ policy. Consult each module's `__manifest__.py` file, which contains a `license`
 that explains its license.
 
 ----
-
 OCA, or the [Odoo Community Association](http://odoo-community.org/), is a nonprofit
 organization whose mission is to support the collaborative development of Odoo features
 and promote its widespread use.
